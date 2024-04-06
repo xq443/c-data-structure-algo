@@ -1,0 +1,41 @@
+#include<stdio.h>
+#include<stdlib.h>
+
+typedef struct L_Node {
+    struct L_Node* next;
+    int value;
+}L_Node;
+
+int* getSizeRecur(L_Node* l, int* size) {
+    if(l == NULL) return size;
+    else {
+ //       *size = (*size) + 1;
+        (*size)++;
+        return getSizeRecur(l->next, size);
+    }
+}
+
+int* getSize(L_Node* l) {
+    int* size = (int*)malloc(sizeof(int));
+    *size = 0;
+    return getSizeRecur(l, size);
+}
+
+void freeMemory(L_Node* l) {
+    if(l == NULL) return;
+    L_Node* temp = l->next;
+    free(l);
+    return freeMemory(temp);
+}
+
+int main() {
+    L_Node l1 = {NULL, 10};
+    int* count = getSize(&l1);
+    printf("the size is %d\n", *count);
+
+    L_Node l2 = {&l1, 20};
+    int* count2 = getSize(&l2);
+    printf("the size is %d\n", *count2);
+    free(count);
+    free(count2);
+}

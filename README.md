@@ -1,1 +1,2 @@
-# c---data-structure-algo
+Repo for CS5008 HW and labs
+Name: Xujia Qin

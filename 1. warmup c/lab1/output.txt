@@ -1,0 +1,189 @@
+1. 
+
+(base) cathyqindeMacBook-Pro:~ cathyqin$ ssh cathyqin@login.khoury.neu.edu
+ssh: Could not resolve hostname login.khoury.neu.edu: nodename nor servname provided, or not known
+(base) cathyqindeMacBook-Pro:~ cathyqin$ ssh cathyqin@login.khoury.northeastern.edu
+The authenticity of host 'login.khoury.northeastern.edu (129.10.122.39)' can't be established.
+ED25519 key fingerprint is SHA256:/FWATFIhfqS+X+8wki+a8A0d8ggey+gmjK9JeD7yRew.
+This key is not known by any other names.
+Are you sure you want to continue connecting (yes/no/[fingerprint])? yes
+Warning: Permanently added 'login.khoury.northeastern.edu' (ED25519) to the list of known hosts.
+cathyqin@login.khoury.northeastern.edu's password: 
+=================================================================
+You have logged into login-students.khoury.northeastern.edu
+=================================================================
+Linux at Khoury College
+You may SSH to alternative linux machines.
+Alternative linux machines are available if connected to NUwave, 
+or if connected to Northeastern VPN.
+The hostnames are linux-[071-085].khoury.northeastern.edu
+=================================================================
+Linux Beta
+The Beta server may contain newer software versions
+Available at login-beta.khoury.northeastern.edu
+=================================================================
+This server DOES NOT send emails.
+Please use the faculty login server to send emails.
+=================================================================
+If you encounter any issues, please contact us via email
+khoury-systems@northeastern.edu 
+=================================================================
+
+2. [cathyqin@login-students ~]$ vim
+                                                                         
+~                                                                                                                   
+~                                                VIM - Vi IMproved                                                  
+~                                                                                                                   
+~                                                 version 8.0.1763                                                  
+~                                             by Bram Moolenaar et al.                                              
+~                                        Modified by <bugzilla@redhat.com>                                          
+~                                   Vim is open source and freely distributable                                     
+~                                                                                                                   
+~                                          Help poor children in Uganda!                                            
+~                                  type  :help iccf<Enter>       for information                                    
+~                                                                                                                   
+~                                  type  :q<Enter>               to exit                                            
+~                                  type  :help<Enter>  or  <F1>  for on-line help                                   
+~                                  type  :help version8<Enter>   for version info  
+
+
+3. [cathyqin@login-students ~]$ vim /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+
+172.16.207.11 nfs-homedirs nfs-systems nfs-proj nfs-scratch nfs-images nfs-volatile nfs-services nfs-www nfs-homedirs.ccs.neu.edu nfs-systems.ccs.neu.edu nfs-proj.ccs.neu.edu nfs-scratch.ccs.neu.edu nfs-images.ccs.neu.edu nfs-volatile.ccs.neu.edu nfs-services.ccs.neu.edu nfs-www.ccs.neu.edu  nfs-homedirs.khoury.northeastern.edu nfs-systems.khoury.northeastern.edu nfs-proj.khoury.northeastern.edu nfs-scratch.khoury.northeastern.edu nfs-images.khoury.northeastern.edu nfs-volatile.khoury.northeastern.edu nfs-services.khoury.northeastern.edu nfs-www.khoury.northeastern.edu
+
+4. ls lists the files and folders in the current directory.
+
+(base) cathyqindeMacBook-Pro:~ cathyqin$ ls
+Applications	Downloads	Movies		Public		pivot
+Desktop		IdeaProjects	Music		README.md	test.cpp
+Documents	Library		Pictures	anaconda3	test.py
+
+5. mkdir Create a new directory
+(base) cathyqindeMacBook-Pro:~ cathyqin$ mkdir data_strcture_c
+(base) cathyqindeMacBook-Pro:~ cathyqin$ ls
+Applications	Downloads	Movies		Public		data_strcture_c	test.py
+Desktop		IdeaProjects	Music		README.md	pivot
+Documents	Library		Pictures	anaconda3	test.cpp
+
+6. cd Change directory
+(base) cathyqindeMacBook-Pro:~ cathyqin$ cd data_strcture_c
+
+7. man Manual pages
+(base) cathyqindeMacBook-Pro:data_strcture_c cathyqin$ man ls
+
+LS(1)                                            General Commands Manual                                           
+
+NAME
+     ls – list directory contents
+
+SYNOPSIS
+     ls [-@ABCFGHILOPRSTUWabcdefghiklmnopqrstuvwxy1%,] [--color=when] [-D format] [file ...]
+
+DESCRIPTION
+     For each operand that names a file of a type other than directory, ls displays its name as well as any requested,
+     associated information.  For each operand that names a file of type directory, ls displays the names of files
+     contained within that directory, as well as any requested, associated information.
+
+     If no operands are given, the contents of the current directory are displayed.  If more than one operand is given,
+     non-directory operands are displayed first; directory and non-directory operands are sorted separately and in
+     lexicographical order.
+
+     The following options are available:
+
+     -@      Display extended attribute keys and sizes in long (-l) output.
+
+     -A      Include directory entries whose names begin with a dot (‘.’) except for . and ...  Automatically set for
+             the super-user unless -I is specified.
+
+     -B      Force printing of non-printable characters (as defined by ctype(3) and current locale settings) in file
+             names as \xxx, where xxx is the numeric value of the character in octal.  This option is not defined in
+             IEEE Std 1003.1-2008 (“POSIX.1”).
+
+     -C      Force multi-column output; this is the default when output is to a terminal.
+
+     -D format
+             When printing in the long (-l) format, use format to format the date and time output.  The argument format
+             is a string used by strftime(3).  Depending on the choice of format string, this may result in a different
+             number of columns in the output.  This option overrides the -T option.  This option is not defined in IEEE
+             Std 1003.1-2008 (“POSIX.1”).
+
+     -F      Display a slash (‘/’) immediately after each pathname that is a directory, an asterisk (‘*’) after each
+             that is executable, an at sign (‘@’) after each symbolic link, an equals sign (‘=’) after each socket, a
+             percent sign (‘%’) after each whiteout, and a vertical bar (‘|’) after each that is a FIFO.
+
+     -G      Enable colorized output.  This option is equivalent to defining CLICOLOR or COLORTERM in the environment
+             and setting --color=auto.  (See below.)  This functionality can be compiled out by removing the definition
+             of COLORLS.  This option is not defined in IEEE Std 1003.1-2008 (“POSIX.1”).
+
+     -H      Symbolic links on the command line are followed.  This option is assumed if none of the -F, -d, or -l
+             options are specified.
+
+     -I      Prevent -A from being automatically set for the super-user.  This option is not defined in IEEE Std
+             1003.1-2008 (“POSIX.1”).
+
+     -L      Follow all symbolic links to final target and list the file or directory the link references rather than
+             the link itself.  This option cancels the -P option.
+
+     -O      Include the file flags in a long (-l) output.  This option is incompatible with IEEE Std 1003.1-2008
+             (“POSIX.1”).  See chflags(1) for a list of file flags and their meanings.
+
+     -P      If argument is a symbolic link, list the link itself rather than the object the link references.  This
+             option cancels the -H and -L options.
+
+     -R      Recursively list subdirectories encountered.
+
+     -S      Sort by size (largest file first) before sorting the operands in lexicographical order.
+
+8.  rmdir Removes an empty directory
+(base) cathyqindeMacBook-Pro:~ cathyqin$ rmdir data_strcture_c
+(base) cathyqindeMacBook-Pro:~ cathyqin$ ls
+Applications	Downloads	Movies		Public		pivot
+Desktop		IdeaProjects	Music		README.md	test.cpp
+Documents	Library		Pictures	anaconda3	test.py
+
+9. sort Sorts information
+(base) cathyqindeMacBook-Pro:~ cathyqin$ vim example.txt
+(base) cathyqindeMacBook-Pro:~ cathyqin$ cat example.txt
+banana
+apple
+orange
+grape
+
+(base) cathyqindeMacBook-Pro:~ cathyqin$ sort example.txt
+apple
+banana
+grape
+orange
+
+10. cat Concatenates files and prints them to standard output
+(base) cathyqindeMacBook-Pro:~ cathyqin$ cat example.txt
+banana
+apple
+orange
+grape
+
+11. nl Outputs a file with number of lines
+(base) cathyqindeMacBook-Pro:~ cathyqin$ nl example.txt
+     1	banana
+     2	apple
+     3	orange
+     4	grape
+
+12. less Sends the contents of a file to standard output
+(base) cathyqindeMacBook-Pro:~ cathyqin$ less example.txt
+
+banana
+apple
+orange
+grape
+example.txt (END)
+
+13. grep Prints lines that match a pattern
+(base) cathyqindeMacBook-Pro:~ cathyqin$ grep "a" example.txt
+banana
+apple
+orange
+grape                                                                                                      
+

@@ -1,0 +1,5 @@
+First name is Big
+Last name is  Lebowski
+Goodbye, Big
+Formal goodbye, Lebowski
+[Inferior 1 (process 3993118) exited normally]
