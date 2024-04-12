@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 // Function to create a new linked list node
-LinkedListNode* CreateLinkedListNode(char* data) {
+LinkedListNode* CreateLinkedListNode(HTKeyValue* data) {
     LinkedListNode* node = (LinkedListNode*)malloc(sizeof(LinkedListNode));
     if (node != NULL) {
         node->payload = data;
@@ -17,17 +17,16 @@ LinkedListNode* CreateLinkedListNode(char* data) {
 
 // Function to destroy a linked list node
 int DestroyLinkedListNode(LinkedListNode* node) {
-    if (node == NULL)
-        return 1;
-    free(node->payload);
+    if (node == NULL) return 1;
+    free(node->payload->key);
+    free(node->payload->value);
     free(node);
     return 0;  // Returns 0 if the destroy was successful
 }
 
 // Function to remove an element from the linked list
 int RemoveLLElem(LinkedList list, LinkedListNodePtr ptr) {
-    if (list == NULL || ptr == NULL || list->head == NULL)
-        return 1;
+    if (list == NULL || ptr == NULL || list->head == NULL) return 1;
     // the element to remove is in the head position
     if (ptr == list->head) {
         list->head = ptr->next;
@@ -49,6 +48,61 @@ int RemoveLLElem(LinkedList list, LinkedListNodePtr ptr) {
     list->num_elements--;
     return 0;
 }
+
+int RemoveTailNode(LinkedList list) {
+    LinkedListNode *tmp = list->tail;
+    if (list->tail->prev == NULL) {
+        list->head = NULL;
+        list->tail = NULL;
+    } else {
+        list->tail = list->tail->prev;
+        list->tail->next = NULL;
+    }
+    list->num_elements--;
+    free(tmp->payload->key);
+    free(tmp->payload->value);
+    free(tmp->payload);
+    free(tmp);
+    return 0;
+}
+
+int RemoveHeadNode(LinkedList list) {
+    LinkedListNode *tmp = list->head;
+    if (list->head->next == NULL) {
+        list->head = NULL;
+        list->tail = NULL;
+    } else {
+        list->head = list->head->next;
+        list->head->prev = NULL;
+    }
+    list->num_elements--;
+    free(tmp->payload->key);
+    free(tmp->payload->value);
+    free(tmp->payload);
+    free(tmp);
+    return 0;
+}
+
+int RemoveNode(LinkedList list, LinkedListNodePtr ptr) {
+    if (ptr == list->head) {
+        RemoveHeadNode(list);
+        return 0;
+    }
+    if (ptr == list->tail) {
+        RemoveTailNode(list);
+        return 0;
+    }
+    // update prev & next pointer
+    ptr->prev->next = ptr->next;
+    ptr->next->prev = ptr->prev;
+    list->num_elements--;
+    free(ptr->payload->key);
+    free(ptr->payload->value);
+    free(ptr->payload);
+    free(ptr);
+    return 0;
+}
+
 
 // Function to create a new linked list
 LinkedList CreateLinkedList() {
@@ -82,9 +136,8 @@ unsigned int NumElementsInLinkedList(LinkedList list) {
 }
 
 // Function to insert an element into the linked list
-int InsertLinkedList(LinkedList list, char* data) {
-    if (list == NULL || data == NULL)
-        return 1;
+int InsertLinkedList(LinkedList list, HTKeyValue* data) {
+    if (list == NULL || data == NULL) return 1;
     LinkedListNode* node = CreateLinkedListNode(data);
     if (node == NULL)
         return 1;
@@ -104,7 +157,7 @@ int InsertLinkedList(LinkedList list, char* data) {
 }
 
 // Function to remove and return the element from the head of the linked list
-int PopLinkedList(LinkedList list, char** dataPtr) {
+int PopLinkedList(LinkedList list, HTKeyValue** dataPtr) {
     if (list == NULL || list->head == NULL || dataPtr == NULL)
         return 1;
     // Copy payload and dereference dataPtr to the value it points to
@@ -117,79 +170,79 @@ int PopLinkedList(LinkedList list, char** dataPtr) {
     return 0;
 }
 
-// Function to swap two elements in an array
-void swap(char* arr[], int i, int j) {
-    char* temp = arr[j];
-    arr[j] = arr[i];
-    arr[i] = temp;
-}
+// // Function to swap two elements in an array
+// void swap(char* arr[], int i, int j) {
+//     char* temp = arr[j];
+//     arr[j] = arr[i];
+//     arr[i] = temp;
+// }
 
-// Function to partition an array in ascending order
-int partitionInAsc(char* arr[], int low, int high) {
-    char* pivot = arr[high];
-    int i = low - 1;
-    for (int j = low; j < high; j++) {
-        if (strcmp(arr[j], pivot) < 0) {
-            i++;
-            swap(arr, i, j);
-        }
-    }
-    swap(arr, i + 1, high);
-    return (i + 1);
-}
+// // Function to partition an array in ascending order
+// int partitionInAsc(char* arr[], int low, int high) {
+//     char* pivot = arr[high];
+//     int i = low - 1;
+//     for (int j = low; j < high; j++) {
+//         if (strcmp(arr[j], pivot) < 0) {
+//             i++;
+//             swap(arr, i, j);
+//         }
+//     }
+//     swap(arr, i + 1, high);
+//     return (i + 1);
+// }
 
-// Function to partition an array in descending order
-int partitionInDesc(char* arr[], int low, int high) {
-    char* pivot = arr[high];
-    int i = low - 1;
-    for (int j = low; j < high; j++) {
-        // take pointers as args
-        if (strcmp(arr[j], pivot) > 0) {
-            i++;
-            swap(arr, i, j);
-        }
-    }
-    swap(arr, i + 1, high);
-    return (i + 1);
-}
+// // Function to partition an array in descending order
+// int partitionInDesc(char* arr[], int low, int high) {
+//     char* pivot = arr[high];
+//     int i = low - 1;
+//     for (int j = low; j < high; j++) {
+//         // take pointers as args
+//         if (strcmp(arr[j], pivot) > 0) {
+//             i++;
+//             swap(arr, i, j);
+//         }
+//     }
+//     swap(arr, i + 1, high);
+//     return (i + 1);
+// }
 
-// Function to perform quicksort on a string array
-void quickSort(char* arr[], int low, int high, int ascending) {
-    if (low < high) {
-        int pivot;
-        if (ascending)
-            pivot = partitionInAsc(arr, low, high);
-        else
-            pivot = partitionInDesc(arr, low, high);
-        quickSort(arr, low, pivot - 1, ascending);
-        quickSort(arr, pivot + 1, high, ascending);
-    }
-}
+// // Function to perform quicksort on a string array
+// void quickSort(char* arr[], int low, int high, int ascending) {
+//     if (low < high) {
+//         int pivot;
+//         if (ascending)
+//             pivot = partitionInAsc(arr, low, high);
+//         else
+//             pivot = partitionInDesc(arr, low, high);
+//         quickSort(arr, low, pivot - 1, ascending);
+//         quickSort(arr, pivot + 1, high, ascending);
+//     }
+// }
 
-// Function to sort a linked list
-void SortLinkedList(LinkedList list, unsigned int ascending) {
-    // corner case
-    if (list == NULL || list->head == NULL || list->head->next == NULL)
-        return;
-    int n = list->num_elements;
-    // convert the list into array pointer
-    // a pointer to pointer of payload,  making it an array of strings
-    char** arr = (char**)malloc(n * sizeof(char*));
-    LinkedListNode* curr = list->head;
-    // assign the value of array into linkedlist as its payload
-    for (int i = 0; i < n; i++) {
-        arr[i] = curr->payload;
-        curr = curr->next;
-    }
-    quickSort(arr, 0, n - 1, ascending);
+// // Function to sort a linked list
+// void SortLinkedList(LinkedList list, unsigned int ascending) {
+//     // corner case
+//     if (list == NULL || list->head == NULL || list->head->next == NULL)
+//         return;
+//     int n = list->num_elements;
+//     // convert the list into array pointer
+//     // a pointer to pointer of payload,  making it an array of strings
+//     char** arr = (char**)malloc(n * sizeof(char*));
+//     LinkedListNode* curr = list->head;
+//     // assign the value of array into linkedlist as its payload
+//     for (int i = 0; i < n; i++) {
+//         arr[i] = curr->payload;
+//         curr = curr->next;
+//     }
+//     quickSort(arr, 0, n - 1, ascending);
 
-    curr = list->head;
-    for (int i = 0; i < n; i++) {
-        curr->payload = arr[i];
-        curr = curr->next;
-    }
-    free(arr);
-}
+//     curr = list->head;
+//     for (int i = 0; i < n; i++) {
+//         curr->payload = arr[i];
+//         curr = curr->next;
+//     }
+//     free(arr);
+// }
 
 // Function to create a new linked list iterator
 LLIter CreateLLIter(LinkedList list) {
@@ -247,13 +300,6 @@ int LLIterPrev(LLIter iter) {
     return 1;
 }
 
-int LLIterGetPayload(LLIter iter, char** payload) {
-    if (iter != NULL && iter->cur_node != NULL) {
-        *payload = iter->cur_node->payload;
-        return 0;
-    }
-    return 1;
-}
 
 int LLIterDelete(LLIter iter) {
     if (iter == NULL || iter->list == NULL || iter->cur_node == NULL) return 1;
@@ -292,29 +338,6 @@ int LLIterDelete(LLIter iter) {
     return 0;
 }
 
-int LLIterInsertBefore(LLIter iter, char* payload) {
-    if (!iter || !iter->list || !iter->cur_node || !payload) return 1;
-    LinkedList list = iter->list;
-    LinkedListNodePtr curr = iter->cur_node;
-
-    // Create new node
-    LinkedListNodePtr newNode = CreateLinkedListNode(payload);
-    if (!newNode) return 1;  // Out of memory
-
-    // Adjust pointers
-    newNode->next = curr;
-    newNode->prev = curr->prev;
-    curr->prev = newNode;
-
-    // If newNode is not the head node
-    if (newNode->prev != NULL) {
-        newNode->prev->next = newNode;
-    } else {
-        list->head = newNode;  // If newNode is the head node
-    }
-    list->num_elements++;
-    return 0;
-}
 
 int DestroyLLIter(LLIter iter) {
     if (iter == NULL) return 1;  // Check for NULL pointer

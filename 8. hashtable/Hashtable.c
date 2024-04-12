@@ -3,7 +3,7 @@
 #include <string.h>
 #include <stdint.h>
 #include "LinkedList_easy.h"
-#include "Hashtable.h"
+#include "Hashtable_easy.h"
 /*
  *  Contains implmentation of FNV Hash function. 
  *
@@ -20,6 +20,7 @@
  *  See <http://www.gnu.org/licenses/>.
  */
 #include<stdint.h>
+typedef void (*ValueFreeFnPtr)(char*);
 
 uint64_t FNVHash64(unsigned char *buffer, unsigned int len) {
   // This code is adapted from code by Landon Curt Noll
@@ -53,41 +54,55 @@ uint64_t FNVHashInt64(uint64_t makehash) {
     makehash >>= 8;
   }
   return FNVHash64(buf, 8);
-
 }
+
 void ResizeHashtable(Hashtable ht) {
+  if (ht == NULL) return;
   int new_size = ht->num_buckets * 2;
   // Allocating memory for the new buckets array
   LinkedList* new_buckets = (LinkedList*)malloc(new_size * sizeof(LinkedList));
   if (new_buckets == NULL) return;
 
   for (int i = 0; i < new_size; i++) {
-    new_buckets[i] = NULL;
+    new_buckets[i] = CreateLinkedList();
+    if(new_buckets[i] == NULL) {
+      for (int j = 0; j < i; j++) {
+          DestroyLinkedList(new_buckets[j]);
+      }
+      free(new_buckets);
+      return;
+    }
   }
   for (int i = 0; i < ht->num_buckets; i++) {
-    LinkedList list = ht->buckets[i];
-    if(list != NULL) {
-      LLIter iterator = CreateLLIter(list);
-      char* word;
-      while(LLIterHasNext(iterator)) {
-        LLIterGetPayload(iterator, &word);
-        HTKeyValue kvp;
-        kvp.key = FNVHash64((unsigned char *)word, strlen(word)); // Hashing the word to get the key
-        kvp.value = list;
-        HTKeyValue old_kvp;
-        PutInHashtable(ht, kvp, &old_kvp); // Putting the kv in the ht
-        LLIterNext(iterator); 
+    LinkedListNodePtr curr = ht->buckets[i]->head;
+    while (curr != NULL) {
+      HTKeyValue *kvp = curr->payload;
+      int new_hash = FNVHash64((unsigned char *)kvp->key, new_size);
+      // Insert into the new bucket
+      if (InsertLinkedList(new_buckets[new_hash], kvp) == -1) {
+          // Insertion failed, clean up and return
+          for (int j = 0; j < new_size; j++) {
+              DestroyLinkedList(new_buckets[j]);
+          }
+          free(new_buckets);
+          return;
       }
-      DestroyLLIter(iterator);
+      curr = curr->next;
     }
+  }
+
+  // Free the memory occupied by the old buckets
+  for (int i = 0; i < ht->num_buckets; i++) {
+      DestroyLinkedList(ht->buckets[i]);
   }
   free(ht->buckets); // Freeing memory allocated for the old buckets array
   ht->buckets = new_buckets; // Updating the buckets array
   ht->num_buckets = new_size; // Updating buckets size
 }
 
-int HashKeyToBucketNum(Hashtable ht, uint64_t key) {
-  return key % ht->num_buckets;  // Hashing the key to get the bucket number
+int HashKeyToBucketNum(Hashtable ht, char* key) {
+    uint64_t hashedKey = FNVHash64((unsigned char *)key, strlen(key));
+    return hashedKey % ht->num_buckets;  // Hashing the key to get the bucket number
 }
 
 double GetAlpha(Hashtable *hashtable) {
@@ -98,67 +113,106 @@ double GetAlpha(Hashtable *hashtable) {
 
 Hashtable CreateHashtable(int num_buckets) {
   Hashtable map = (Hashtable)malloc(sizeof(struct hashtableInfo));
-  if (map == NULL) return NULL;
   map->num_buckets = num_buckets;
   map->num_elements = 0;
   map->buckets = (LinkedList*)malloc(num_buckets * sizeof(LinkedList));
-  if (map->buckets == NULL) {
-      free(map);
-      return NULL;
-  }
   for (int i = 0; i < num_buckets; i++) {
-    map->buckets[i] = NULL;
+    map->buckets[i] = CreateLinkedList();
   }
   return map;
 }
 
-int PutInHashtable(Hashtable ht, HTKeyValue kvp, HTKeyValue *old_kvp) {
-  if (ht == NULL) return 1;
-  // if the load factor exceeds the threshold resize
-  if (GetAlpha(&ht) >= 0.75) {
-    ResizeHashtable(ht);
-  }
-  int bucket_num = HashKeyToBucketNum(ht, kvp.key); // Getting the bucket number for the key
-  LinkedList list = ht->buckets[bucket_num]; // Getting the linkedlist in the bucket
+int PutInHashtable(Hashtable ht, char * key) {
+    if (ht == NULL || ht->buckets == NULL) {
+        return 1; // Hashtable is not initialized
+    }
+    char *sorted_key = strdup(key);
+    SortString(sorted_key);
+    int bucketIndex = HashKeyToBucketNum(ht, sorted_key);
+    LinkedList bucket = ht->buckets[bucketIndex];
+    LinkedListNode *curr = bucket->head;
+    while (curr != NULL) {
+      if (strcmp(curr->payload->key, sorted_key) == 0) {
+        // Key already exists, add the value to the values linked list
+        char* new_value = strdup(key);
+        if (new_value == NULL) {
+            free(sorted_key);
+            return 1; // Memory allocation failed
+        }
+        // Create a new node for the value
+        LinkedListNode *new_node = (LinkedListNode *)malloc(sizeof(LinkedListNode));
+        if (new_node == NULL) {
+            free(new_value);
+            free(sorted_key);
+            return 1; // Memory allocation failed
+        }
+        // Set the payload of the new node
+        new_node->payload = (HTKeyValue *)malloc(sizeof(HTKeyValue));
+        if (new_node->payload == NULL) {
+            free(new_value);
+            free(new_node);
+            free(sorted_key);
+            return 1; // Memory allocation failed
+        }
+        new_node->payload->key = sorted_key;
+        new_node->payload->value = new_value;
+        new_node->next = NULL; // Ensure new node is the last in the list
 
-  if (list == NULL) { // Checking if the bucket is empty
-      list = CreateLinkedList(); // Creating a new linked list
-      ht->buckets[bucket_num] = list; // Assigning the linked list to the bucket
-  }
-
-  HTKeyValue ret;
-  if (LookupInHashtable(ht, kvp.key, &ret) == 0) { // Checking if the key already exists
-      if (old_kvp != NULL)
-          *old_kvp = ret;
-      return 2; // Return 2 if the key already exists
-  }
-  InsertLinkedList((LinkedList)kvp.value, kvp.value);  // Insert kv pair
-  ht->num_elements++;  // Increment the number of elements
-  return 0;
+        // Append the new node to the tail
+        LinkedListNode *tail = bucket->head;
+        if (tail == NULL) {
+            bucket->head = new_node; // Empty list
+        } else {
+            while (tail->next != NULL) {
+                tail = tail->next;
+            }
+            tail->next = new_node;
+        }
+        bucket->num_elements++;
+        // Update the number of elements in the hashtable
+        ht->num_elements++;
+        return 2; // Key already exists and value updated
+      }
+      curr = curr->next;
+    }
+    // No collision, insert the new key-value pair into the bucket
+    HTKeyValue *kvp = (HTKeyValue *)malloc(sizeof(HTKeyValue));
+    if (kvp == NULL) {
+        free(sorted_key);
+        return 1; // Memory allocation failed
+    }
+    kvp->key = sorted_key;
+    kvp->value = strdup(key); // Duplicate the value string
+    if (kvp->value == NULL) {
+        free(kvp->key);
+        free(kvp);
+        return 1; // Memory allocation failed
+    }
+    if (InsertLinkedList(bucket, kvp) == -1) {
+        free(kvp->key);
+        free(kvp->value);
+        free(kvp);
+        return 1; // Insertion failed
+    }
+    // Update the number of elements in the hashtable
+    ht->num_elements++;
+    return 0; // Successful insertion
 }
 
-int LookupInHashtable(Hashtable ht, uint64_t key, HTKeyValue *result) {
-  if (ht == NULL) return -1;
-  int bucket_num = HashKeyToBucketNum(ht, key);  // Getting the bucket number for the key
-  LinkedList list = ht->buckets[bucket_num];  // Getting the linked list in the bucket
-  if (list == NULL) return -1;  // if the bucket is empty
-  LLIter iter = CreateLLIter(list); // Creating an iterator for the linked list
-  char *word;
-  while (LLIterHasNext(iter)) { // Looping through each element in the linked list
-    LLIterGetPayload(iter, &word); // Getting the payload of the current node
-    uint64_t hashed_key = FNVHash64((unsigned char *)word, strlen(word)); // Hashing the payload to check against the provided key
-    if (hashed_key == key) { // If the hashed key matches the provided key
-        if (result != NULL) { // Checking if the result pointer is valid
-            result->key = key; // Setting the key of the result to the provided key
-            result->value = list; // Setting the value of the result to the current linked list
-        }
-        DestroyLLIter(iter); // Destroying the iterator
-        return 0; // Return success
-    }
-    LLIterNext(iter); // Moving to the next element in the linked list
+
+
+
+int LookupInHashtable(Hashtable ht, char* key, LinkedList* ret) {
+  char *cpstr = strdup(key);
+  SortString(cpstr);
+  int bucket = HashKeyToBucketNum(ht, cpstr);
+  LinkedList list = ht->buckets[bucket];
+  if (list == NULL) return -1;
+  if (list->num_elements > 0) {
+    *ret = list;
+    return 0;
   }
-  DestroyLLIter(iter); // Destroying the iterator
-  return -1; // Return failure as the key was not found in the hashtable
+  return -1;
 }
 
 
@@ -166,63 +220,76 @@ int NumElemsInHashtable(Hashtable ht) {
   if (ht == NULL) return -1;
   return ht->num_elements;
 }
-int RemoveFromHashtable(Hashtable ht, uint64_t key, HTKeyValue *junk_kvp) {
-  if (ht == NULL) return -1; // Return -1 if the hashtable is NULL
-  // Calculate the bucket number for the given key
-  int bucket_num = HashKeyToBucketNum(ht, key);
 
-  // Get the linked list in the corresponding bucket
-  LinkedList list = ht->buckets[bucket_num];
+int RemoveFromHashtable(Hashtable ht, char* key) {
+    if (ht == NULL || key == NULL) return -1; // Check for NULL hashtable or key
 
-  if (list == NULL)
-      return -1; // Return -1 if the bucket is empty
-
-  // Create an iterator for the linked list
-  LLIter iter = CreateLLIter(list);
-  char *word;
-
-  // Iterate through the linked list
-  while (LLIterHasNext(iter)) {
-    LLIterGetPayload(iter, &word);
+    char *cpstr = strdup(key);
+    SortString(cpstr);
     
-    // Compute the hashed key for the current element
-    uint64_t hashed_key = FNVHash64((unsigned char *)word, strlen(word));
-
-    // Check if the hashed key matches the given key
-    if (hashed_key == key) {
-        // Remove the current element from the linkedlist
-        RemoveLLElem(list, iter->cur_node);
-        ht->num_elements--; // Decrement the number of elements in the hashtable
-
-        // If junk_kvp pointer is provided, set its key and value
-        if (junk_kvp != NULL) {
-            junk_kvp->key = key;
-            junk_kvp->value = word; // Store a pointer to the removed value
-        }else {
-                free(word); // Free the memory if junk_kvp is not provided
+    // Calculate the bucket number for the given key
+    int bucket_num = HashKeyToBucketNum(ht, cpstr);
+    
+    // Get the linked list in the corresponding bucket
+    LinkedListNodePtr curr = ht->buckets[bucket_num]->head;
+    
+    // Traverse the linked list to find the node with the matching key
+    while (curr != NULL) {
+        printf("Current key: %s\n", curr->payload->key); // Print current key for debugging
+        printf("Comparing keys: \"%s\" and \"%s\"\n", curr->payload->key, key);
+        if (strcmp(curr->payload->key, cpstr) == 0) { // Use strcmp for string comparison
+            RemoveLLElem(ht->buckets[bucket_num], curr);
+            ht->num_elements--;
+            return 0; // successful removal
         }
-
-        // Destroy the iterator and return success
-        DestroyLLIter(iter);
-        return 0;
+        curr = curr->next; // Move to the next node
     }
-
-    // Move to the next element in the linked list
-    LLIterNext(iter);
+    return -1; // if key not found in the hashtable
 }
 
-  // Destroy the iterator and return failure if the key was not found
-  DestroyLLIter(iter);
-  return -1;
-}
+
+
 
 void DestroyHashtable(Hashtable ht) {
-if (ht == NULL) return;
-for (int i = 0; i < ht->num_buckets; i++) {
-    if (ht->buckets[i] != NULL) {
-        DestroyLinkedList(ht->buckets[i]);
-    }
+  for (int i = 0; i < ht->num_buckets; i++) {
+    DestroyLinkedList(ht->buckets[i]);
+  }
+  free(ht->buckets); // Free the array of linked lists
+  free(ht);
 }
-free(ht->buckets);
-free(ht);
+
+// compare characters for qsort
+int CompareChars(const void *a, const void *b) {
+    // Cast a and b to char pointers and dereference them to get characters
+    // Then subtract one from the other to determine the comparison result
+    return (*(const char*)a - *(const char*)b);
+}
+
+// sort a string in ascending order
+void SortString(char *str) {
+    int length = strlen(str);
+    
+    // Use qsort to sort the string in place
+    // Parameters:
+    // - str: Pointer to the first element of the array to be sorted
+    // - length: Number of elements in the array
+    // - sizeof(char): Size of each element in bytes (in this case, a character)
+    // - compareChars: Pointer to the comparison function
+    qsort(str, length, sizeof(char), CompareChars);
+}
+
+// generate anagrams
+void GenerateAnagrams(Hashtable ht) {
+  printf("====== Anagram Report ======\n");
+  for(int i = 0; i < ht->num_buckets; i++) {
+    LinkedList bucket = ht->buckets[i];
+    if(bucket->num_elements == 0) continue;
+    LinkedListNodePtr curr = ht->buckets[i]->head;
+    printf("%s -> [ ", curr->payload->key);
+    while (curr != NULL) {
+      printf("%s ", curr->payload->value);
+      curr = curr->next;
+    }
+    printf("]\n");
+  }
 }

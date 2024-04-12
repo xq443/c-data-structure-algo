@@ -1,4 +1,6 @@
 #include <stdint.h>
+#include "KeyValuePair.h"
+
 
 /*
  *  This is free software: you can redistribute it and/or modify
@@ -21,7 +23,7 @@
 // contains next and prev pointers as well as a customer-supplied payload
 // pointer.
 typedef struct ll_node {
-    char           *payload;  // Pointer to a string, most likely on the heap
+    HTKeyValue     *payload;  // Pointer to a string, most likely on the heap
     struct ll_node *next;     // next node in list, or NULL
     struct ll_node *prev;     // prev node in list, or NULL
 } LinkedListNode, *LinkedListNodePtr;
@@ -60,7 +62,7 @@ typedef struct ll_iter {
 // INPUT: A pointer that the payload of the returned LLNode will point to.
 //
 // Returns a pointer to the new LinkedListNode.
-LinkedListNode* CreateLinkedListNode(char *data);
+LinkedListNode* CreateLinkedListNode(HTKeyValue *keyValue);
 
 // Destroys and free's a provided LLNode.
 //
@@ -116,7 +118,18 @@ unsigned int NumElementsInLinkedList(LinkedList list);
 // INPUT: A pointer to a string for a node in the linkedList.
 //
 // Returns 0 if the insertion was successful; non-zero for failure.
-int InsertLinkedList(LinkedList list, char* data);
+int InsertLinkedList(LinkedList list, HTKeyValue *keyValue);
+
+
+// Removes an element of a LinkedList, with the string
+// as the given pointer.
+// The customer is responsible for allocating the string.
+//
+// INPUT: A pointer to the LinkedList that will be added to,
+// INPUT: A pointer to a string for a node in the linkedList.
+//
+// Returns 0 if the insertion was successful; non-zero for failure.
+int RemoveNode(LinkedList list, LinkedListNodePtr ptr);
 
 // Copies the pointer to the payload at the head of a list
 // to the provided dataPtr, and removes the head node from the list.
@@ -126,8 +139,7 @@ int InsertLinkedList(LinkedList list, char* data);
 //        with the char* at the head of the list.
 //
 // Returns 0 if the pop was successful; non-zero for failure.
-int PopLinkedList(LinkedList list, char** dataPtr);
-
+int PopLinkedList(LinkedList list, HTKeyValue** dataPtr);
 
 
 // Sorts the list given the comparator.
@@ -136,8 +148,8 @@ int PopLinkedList(LinkedList list, char** dataPtr);
 //
 // INPUT: The list to sort
 // INPUT: 1 if the sort should be ascending; 0 for descending.
-void SortLinkedList(LinkedList list,
-                    unsigned int ascending);
+// void SortLinkedList(LinkedList list,
+//                     unsigned int ascending);
 
 // ======================================================
 // LLIter: A Linked List Iterator
@@ -197,7 +209,7 @@ int DestroyLLIter(LLIter iter);
 // INPUT: A pointer to a place to copy the payload pointer.
 //
 // Returns 0 if successful; 1 otherwise.
-int LLIterGetPayload(LLIter iter, char** payload);
+// int LLIterGetPayload(LLIter iter, HTKeyValue** payload);
 
 // Delete the node the iterator is pointing to.  After deletion, the iterator is either:
 //
@@ -226,6 +238,6 @@ int LLIterDelete(LLIter iter);
 // 1 on failure (out of memory)
 // 0 on success; the iterator still points to the same node,
 //   not to the inserted node.
-int LLIterInsertBefore(LLIter iter, char* payload);
+// int LLIterInsertBefore(LLIter iter, HTKeyValue* payload);
 
 #endif  // LINKEDLIST_H

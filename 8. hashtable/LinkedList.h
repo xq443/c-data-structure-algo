@@ -75,7 +75,7 @@ unsigned int NumElementsInLinkedList(LinkedList list);
 // INPUT: A pointer to a payload for a node in the linkedList.
 //
 // Returns 0 if the insertion was successful; non-zero for failure.
-int InsertLinkedList(LinkedList, void*);
+int InsertLinkedList(LinkedList, void* payload);
 
 // Copies the pointer to the payload at the head of a list
 // to the provided dataPtr, and removes the head node from the list.
@@ -177,7 +177,7 @@ int DestroyLLIter(LLIter iter);
 // INPUT: A pointer to a place to copy the payload pointer.
 //
 // Returns 0 if successful; 1 otherwise.
-int LLIterGetPayload(LLIter iter, void** payload);
+int LLIterGetPayload(LLIter iter,  uint64_t** payload);
 
 // Delete the node the iterator is pointing to.  After deletion, the iterator is either:
 //
@@ -208,4 +208,5 @@ int LLIterDelete(LLIter iter, LLPayloadFreeFnPtr payload_free_function);
 //   not to the inserted node.
 int LLIterInsertBefore(LLIter iter, void* payload);
 
-#endif  // LINKEDLIST_H
+#endif  
+// LINKEDLIST_H

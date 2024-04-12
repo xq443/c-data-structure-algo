@@ -14,7 +14,8 @@
 
 #include <stdint.h>
 
-#include "LinkedList.h"
+#include "LinkedList_easy.h"
+#include "KeyValuePair.h"
 
 
 #ifndef HASHTABLE_H
@@ -30,22 +31,9 @@ struct hashtableInfo {
 typedef struct hashtableInfo* Hashtable;
 
 
-// Hashtables store key/value pairs.  We'll define a key to be an
-// unsigned 64-bit integer; it's up to the customer to figure out how
-// to produce an appropriate hash key, but below we provide an
-// implementation of FNV hashing to help them out.  We'll define
-// a value to be a (void *), so that customers can pass in pointers to
-// arbitrary structs as values, but of course we have to worry about
-// memory management as a side-effect.
-typedef struct {
-  uint64_t   key;    // the key in the key/value pair
-  char      *value;  // the value in the key/value pair
-} HTKeyValue, *HTKeyValuePtr;
-
-
 void ResizeHashtable(Hashtable ht);
 
-int HashKeyToBucketNum(Hashtable ht, uint64_t key); 
+int HashKeyToBucketNum(Hashtable ht, char* key); 
 
 double GetAlpha(Hashtable *hashtable);
 
@@ -75,7 +63,7 @@ void DestroyHashtable(Hashtable ht);
 // Returns 0 if put is successful.
 // Returns 1 on failure (e.g., no more memory)
 // Returns 2 if the key is already in the hashtable
-int PutInHashtable(Hashtable ht, HTKeyValue kvp, HTKeyValue *old_kvp);
+int PutInHashtable(Hashtable ht, char* key);
 
 // Looks up the given key in the hashtable.
 // Returns the Key-Value pair in the provided result pointer.
@@ -90,7 +78,7 @@ int PutInHashtable(Hashtable ht, HTKeyValue kvp, HTKeyValue *old_kvp);
 //
 // Returns 0 if the lookup was successful (and the result is valid).
 // Returns -1 if the key was not found.
-int LookupInHashtable(Hashtable ht, uint64_t key, HTKeyValue *result);
+int LookupInHashtable(Hashtable ht, char* key, LinkedList* ret);
 
 // Replaces the value of a given key in the hashtable.
 //
@@ -124,7 +112,7 @@ int NumElemsInHashtable(Hashtable ht);
 //
 // Returns 0 if the key was found successfully (and junkKVP is valid)
 // Returns -1 if the key was not found in the hashtable.
-int RemoveFromHashtable(Hashtable ht, uint64_t key, HTKeyValue *junk_kvp);
+int RemoveFromHashtable(Hashtable ht, char* key);
 
 // Computes an int from a string, to be used for a key in a HTKeyValue.
 //
@@ -143,6 +131,10 @@ uint64_t FNVHash64(unsigned char *buffer, unsigned int len);
 // Returns the int to be used as a key.
 uint64_t FNVHashInt64(uint64_t makehash);
 
+// sort the chars of the string in lexico asc order
+void SortString(char *str);
+// generate the anagrams of the map in the main
+void GenerateAnagrams(Hashtable ht);
 
 #endif  // HASHTABLE_H
 

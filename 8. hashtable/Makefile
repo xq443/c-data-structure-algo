@@ -83,7 +83,7 @@ LinkedList.c:
 	gcc -g LinkList.h LinkedList.c
 
 ## Builds the LinkedList library, if you're using it. 
-LinkedList.o: LinkedList.c LinkedList.h 
+LinkedList.o: LinkedList.c LinkedList_easy.h 
 	gcc -c -Wall -g LinkedList.c -o LinkedList.o
 
 
