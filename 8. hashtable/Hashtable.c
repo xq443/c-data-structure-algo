@@ -56,49 +56,6 @@ uint64_t FNVHashInt64(uint64_t makehash) {
   return FNVHash64(buf, 8);
 }
 
-void ResizeHashtable(Hashtable ht) {
-  if (ht == NULL) return;
-  int new_size = ht->num_buckets * 2;
-  // Allocating memory for the new buckets array
-  LinkedList* new_buckets = (LinkedList*)malloc(new_size * sizeof(LinkedList));
-  if (new_buckets == NULL) return;
-
-  for (int i = 0; i < new_size; i++) {
-    new_buckets[i] = CreateLinkedList();
-    if(new_buckets[i] == NULL) {
-      for (int j = 0; j < i; j++) {
-          DestroyLinkedList(new_buckets[j]);
-      }
-      free(new_buckets);
-      return;
-    }
-  }
-  for (int i = 0; i < ht->num_buckets; i++) {
-    LinkedListNodePtr curr = ht->buckets[i]->head;
-    while (curr != NULL) {
-      HTKeyValue *kvp = curr->payload;
-      int new_hash = FNVHash64((unsigned char *)kvp->key, new_size);
-      // Insert into the new bucket
-      if (InsertLinkedList(new_buckets[new_hash], kvp) == -1) {
-          // Insertion failed, clean up and return
-          for (int j = 0; j < new_size; j++) {
-              DestroyLinkedList(new_buckets[j]);
-          }
-          free(new_buckets);
-          return;
-      }
-      curr = curr->next;
-    }
-  }
-
-  // Free the memory occupied by the old buckets
-  for (int i = 0; i < ht->num_buckets; i++) {
-      DestroyLinkedList(ht->buckets[i]);
-  }
-  free(ht->buckets); // Freeing memory allocated for the old buckets array
-  ht->buckets = new_buckets; // Updating the buckets array
-  ht->num_buckets = new_size; // Updating buckets size
-}
 
 int HashKeyToBucketNum(Hashtable ht, char* key) {
     uint64_t hashedKey = FNVHash64((unsigned char *)key, strlen(key));
@@ -110,6 +67,51 @@ double GetAlpha(Hashtable *hashtable) {
   // Calculating the load factor
   return (double)map->num_elements / (double)map->num_buckets;
 }
+
+void ResizeHashtable(Hashtable ht) {
+    if (ht == NULL) return;
+    int new_size = ht->num_buckets * 2;
+
+    // Allocating memory for the new buckets array
+    LinkedList *new_buckets = (LinkedList*)malloc(new_size * sizeof(LinkedList));
+    if (new_buckets == NULL) return;
+    for (int i = 0; i < new_size; i++) {
+        new_buckets[i] = CreateLinkedList();
+    }
+
+    // Iterate through each bucket in the old hashtable
+    for (int i = 0; i < ht->num_buckets; i++) {
+        LinkedListNodePtr curr = ht->buckets[i]->head;
+        while (curr != NULL) {
+            HTKeyValue *kvp = curr->payload;
+            char *sorted_key = strdup(kvp->key);
+            SortString(sorted_key);
+            int new_hash = HashKeyToBucketNum(ht, sorted_key);
+
+            // Insert into the new bucket
+            if (InsertLinkedList(new_buckets[new_hash], kvp) == -1) {
+
+                // Insertion failed, clean up and return
+                for (int j = 0; j < new_size; j++) {
+                    DestroyLinkedList(new_buckets[j]);
+                }
+                free(new_buckets);
+                return;
+            }
+            free(sorted_key);
+            curr = curr->next;
+        }
+    }
+
+    // Free the memory occupied by the old buckets
+    for (int i = 0; i < ht->num_buckets; i++) {
+        DestroyLinkedList(ht->buckets[i]);
+    }
+    free(ht->buckets); // Freeing memory allocated for the old buckets array
+    ht->buckets = new_buckets; // Updating the buckets array
+    ht->num_buckets = new_size; // Updating buckets size
+}
+
 
 Hashtable CreateHashtable(int num_buckets) {
   Hashtable map = (Hashtable)malloc(sizeof(struct hashtableInfo));
@@ -171,6 +173,10 @@ int PutInHashtable(Hashtable ht, char * key) {
         bucket->num_elements++;
         // Update the number of elements in the hashtable
         ht->num_elements++;
+        // Check if resize is needed after updating the number of elements
+        if (GetAlpha(&ht) > 0.75) {
+            ResizeHashtable(ht);
+        }
         return 2; // Key already exists and value updated
       }
       curr = curr->next;

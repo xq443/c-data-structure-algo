@@ -14,12 +14,7 @@ struct hashtableInfo {
 
 typedef struct hashtableInfo* Hashtable;
 
-
-void ResizeHashtable(Hashtable ht);
-
 int HashKeyToBucketNum(Hashtable ht, uint64_t key); 
-
-double GetAlpha(Hashtable *hashtable);
 
 
 // Hashtables store key/value pairs.  We'll define a key to be an

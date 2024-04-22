@@ -5,6 +5,15 @@ run: Hashtable.o LinkedList.o
 
 test: test_suite
 
+### This builds the hashtable library. Change the filenames accordingly. 
+Hashtable.o: Hashtable.c Hashtable_easy.h
+	gcc -c -Wall -g Hashtable.c -o Hashtable.o
+
+## Builds the LinkedList library, if you're using it. 
+LinkedList.o: LinkedList.c LinkedList_easy.h 
+	gcc -c -Wall -g LinkedList.c -o LinkedList.o
+
+
 # Points to the root of Google Test, relative to where this file is.
 # Remember to tweak this if you move this file.
 GTEST_DIR_A = ${HOME}/src/googletest-release-1.8.0/googletest
@@ -35,11 +44,6 @@ GTEST_HEADERS = $(GTEST_DIR_A)/include/gtest/*.h \
 # trailing _.
 GTEST_SRCS_ = $(GTEST_DIR_A)/src/*.cc $(GTEST_DIR_A)/src/*.h $(GTEST_HEADERS)
 
-# For simplicity and to avoid depending on Google Test's
-# implementation details, the dependencies specified below are
-# conservative and not optimized.  This is fine as Google Test
-# compiles fast and for ordinary users its source rarely changes.
-
 release-1.8.0.tar.gz : 
 	@echo -e "\033[1;93m ----------------"
 	@echo NEED GTEST ZIP
@@ -56,6 +60,7 @@ ${GTEST_DIR_A}/src/gtest-all.cc: release-1.8.0.tar.gz
 gtest_main.o : $(GTEST_DIR)/src/gtest_main.cc
 	$(CXX) $(CPPFLAGS) -I$(GTEST_DIR) $(CXXFLAGS) -c \
             $(GTEST_DIR)/src/gtest_main.cc
+
 
 $(GOOGLE_TEST_LIB): ${GTEST_DIR_A}/src/gtest-all.cc
 	@echo -e "\033[1;93m==========================="
@@ -74,19 +79,6 @@ lib: LinkedList.h LinkedList.c Assert007.c Assert007.h
 	echo Compiling the Example implementation
 	gcc -g LinkedList.c Assert007.c
 
-
-### This builds the hashtable library. Change the filenames accordingly. 
-Hashtable.o: LinkedList.o
-	gcc -c -Wall -g Hashtable.c -o Hashtable.o
-
-LinkedList.c:
-	gcc -g LinkList.h LinkedList.c
-
-## Builds the LinkedList library, if you're using it. 
-LinkedList.o: LinkedList.c LinkedList_easy.h 
-	gcc -c -Wall -g LinkedList.c -o LinkedList.o
-
-
 ## Compiles your hashtable tests.
 test_hashtable.o : test_hashtable.cc
 	g++ -c -Wall -I $(GOOGLE_TEST_INCLUDE) test_hashtable.cc \
@@ -101,4 +93,4 @@ test_suite: $(GOOGLE_TEST_LIB) test_hashtable.o Hashtable.o LinkedList.o
 	@echo -e "====================================\033[0m"
 
 clean: 
-	rm -rf *~ main *.o
+	rm -rf *~ main *.o test_suite

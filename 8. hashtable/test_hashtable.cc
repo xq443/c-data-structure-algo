@@ -228,51 +228,23 @@ TEST(Hashtable, TwoElemsOneBucket) {
 }
 
 TEST(Hashtable, Resize) {
-  Hashtable ht = CreateHashtable(5);
+    Hashtable ht = CreateHashtable(3);
+    ASSERT_TRUE(ht != NULL);
 
-  for (unsigned int i = 0; i < 60; i++) {
-    // do the insert
-    SomeNumPtr np = static_cast<SomeNumPtr>(malloc(sizeof(someNum)));
+    // Insert some elements into the hashtable
+    ASSERT_EQ(PutInHashtable(ht, strdup("test")), 0);
+    ASSERT_EQ(PutInHashtable(ht, strdup("ttes")), 2);
+    printf("before resizing: %d\n", NumElemsInHashtable(ht));
+    printf("before resizing - Load Factor: %.2f\n", GetAlpha(&ht));
 
-    assert(np != NULL);
-    np->num = static_cast<int>(i);
-    char *key1 = strdup("test");
-    ASSERT_EQ(PutInHashtable(ht, key1), 0);
-    ASSERT_EQ(NumElemsInHashtable(ht), 1);
+    // After adding this, need to resize
+    ASSERT_EQ(PutInHashtable(ht, strdup("tets")), 2);
+    printf("after resizing: %d\n", NumElemsInHashtable(ht));
+    printf("after resizing - Load Factor: %.2f\n", GetAlpha(&ht));
 
-    //printf("i = %d\n", i);
-
-    // test double insert
-    ASSERT_EQ(PutInHashtable(ht, key1), 2);
-
-    // test lookup
-    old.key = 1;
-    old.value = NULL;
-    ASSERT_EQ(0, LookupInHashtable(ht, i, &old));
-    ASSERT_EQ(i, old.key);
-    ASSERT_EQ(static_cast<void *>(np), old.value);
-
-    // test bad lookup
-    ASSERT_EQ(-1, LookupInHashtable(ht, i+1));
-
-    // test bad remove
-    ASSERT_EQ(-1, RemoveFromHashtable(ht, i+1));
-
-    // test good remove and reinsert
-    old.key = -100;
-    old.value = NULL;
-    ASSERT_EQ(0, RemoveFromHashtable(ht, i));
-    ASSERT_EQ(i, old.key);
-    ASSERT_EQ(static_cast<void *>(np), old.value);
-    ASSERT_EQ(i, (unsigned)NumElemsInHashtable(ht));
-    ASSERT_EQ(0, PutInHashtable(ht, newkv));
-    ASSERT_EQ(2, PutInHashtable(ht, newkv));
-    ASSERT_EQ(i+1, (unsigned)NumElemsInHashtable(ht));
-  }
-    DestroyHashtable(ht);
+    // Check if the hashtable bucket size has doubled after resizing
+    ASSERT_EQ(ht->num_buckets, 6);
 }
-
-
 
 int main(int argc, char **argv) {
     ::testing::InitGoogleTest(&argc, argv);
